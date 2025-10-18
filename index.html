@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Olympus Quest Log - Arcade Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            background-color: #222222; /* Dark background */
+            color: #FFFFFF; /* White text for contrast */
+            font-size: 1.125rem; /* Base size INCREASED to text-lg for readability */
+        }
+        
+        .retro-text {
+            color: #00FFFF; /* Cyan text for main titles/accents */
+        }
+        
+        .retro-bg {
+            background-color: #000000;
+            box-shadow: 6px 6px #888888; /* Blocky shadow */
+        }
+        
+        .retro-button {
+            background-color: #FFFF00;
+            color: #000000;
+            border: 3px solid #000000;
+            box-shadow: 4px 4px #00FFFF;
+            transition: all 0.1s ease-in-out;
+            border-radius: 0; /* No rounded corners */
+            font-weight: bold; /* Ensure text is chunky */
+            font-size: 0.875rem; /* text-sm for button content */
+        }
+        .retro-button:hover {
+            box-shadow: 2px 2px #FF00FF; /* Pink shadow on hover */
+            transform: translate(2px, 2px);
+        }
+        
+        .active-tab-retro {
+            color: #FFFF00 !important; /* Yellow text when active */
+            background-color: #000000 !important;
+            border-bottom-color: #00FF00 !important; /* Green line when active */
+            box-shadow: 0 4px #00FF00;
+        }
+        
+        .video-frame-container, .chamber-image-container {
+            border: 3px solid #FF00FF; /* Pink border */
+            box-shadow: 4px 4px #888888;
+        }
+
+        .rounded-xl, .rounded-lg, .rounded-full {
+            border-radius: 0 !important;
+        }
+
+        .mission-list {
+            list-style-type: none; /* No default list markers */
+            margin-left: 0;
+            padding-left: 0;
+            font-size: 1rem; /* Text size adjusted */
+        }
+        .mission-list li:before {
+            content: ' > '; /* Retro marker */
+            color: #00FF00;
+            margin-right: 0.5rem;
+        }
+
+    </style>
+</head>
+<body class="min-h-screen font-sans">
+
+    
+
+<header class="bg-black text-white p-4 shadow-lg sticky top-0 z-10 border-b-4 border-cyan-400">
+        <div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center">
+            <h1 class="text-3xl font-extrabold tracking-tight retro-text">
+                <i data-lucide="crown" class="inline-block w-6 h-6 mr-2"></i> OLYMPUS ARCADE QUEST
+            </h1>
+            <div class="flex flex-col sm:flex-row sm:space-x-4 mt-2 sm:mt-0 text-base opacity-90 text-yellow-400">
+                <p id="team-display" class="cursor-pointer font-bold underline hover:text-white" title="Click to change team name">Loading Team...</p>
+                <p id="user-display" class="hidden sm:inline">HERO ID: Loading...</p>
+            </div>
+        </div>
+    </header>
+
+    
+
+<nav class="bg-gray-800 shadow-inner border-b-4 border-gray-600">
+        <div class="max-w-4xl mx-auto flex justify-around text-center py-2">
+            <button data-tab="chambers" class="tab-button px-3 py-2 text-base font-bold border-b-4 border-transparent transition duration-0 retro-text active-tab-retro">
+                <i data-lucide="map" class="w-4 h-4 inline mr-1"></i> CHAMBERS
+            </button>
+            <button data-tab="achievements" class="tab-button px-3 py-2 text-base font-bold border-b-4 border-transparent transition duration-0 text-white hover:retro-button-hover">
+                <i data-lucide="award" class="w-4 h-4 inline mr-1"></i> POWER-UPS
+            </button>
+            <button data-tab="rubric" class="tab-button px-3 py-2 text-base font-bold border-b-4 border-transparent transition duration-0 text-white hover:retro-button-hover">
+                <i data-lucide="scroll" class="w-4 h-4 inline mr-1"></i> SCORECARD
+            </button>
+        </div>
+    </nav>
+
+    
+
+<main class="max-w-4xl mx-auto p-4 md:p-8">
+
+        
+
+<div id="content-container">
+            
+
+</div>
+
+    </main>
+
+    
+
+<div id="loading-spinner" class="fixed inset-0 bg-black/90 flex items-center justify-center z-50">
+        <div class="text-2xl font-bold retro-text animate-pulse">LOADING...</div>
+    </div>
+
+
+    
+
+<script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // setLogLevel('Debug'); // Uncomment to see Firebase logs
+
+        // Global Firebase variables (provided by the environment)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let db, auth, userId;
+        
+        const TEAM_COLLECTION_PATH = `artifacts/${appId}/public/data/olympus_teams`;
+        const STATUS_DOCUMENT_ID = 'progress_status';
+
+        let teamId = null; 
+        let userProgress = {}; 
+
+        // --- Data Definitions (UPDATED with 8 Chambers) ---
+        const chambersData = [
+            { 
+                id: 'chamber1', 
+                icon: 'gamepad', 
+                title: 'Chamber 1: What Makes a Good Game?', 
+                skill: 'Game Analysis & Discussion', 
+                objective: 'Can I… understand what makes a good game?', 
+                mission: '<ul class="mission-list"><li>Talk about games I enjoy and why.</li><li>Spot what makes a game fun or challenging.</li><li>Share my ideas for a new game.</li></ul>', 
+                tip: "🎯 Leader Focus: Lead the team in discussing and comparing favourite games to spot patterns of fun and fairness.", 
+                // Retaining the specific image URL for Chamber 1
+                imageUrl: 'https://cdn.glitch.global/c347d4a2-9e96-4186-b485-6b582121e780/what-makes-a-good-game.png?v=1719276587396' 
+            },
+            { 
+                id: 'chamber2', 
+                icon: 'lightbulb', 
+                title: 'Chamber 2: Planning My Game World', 
+                skill: 'Game Design & Planning', 
+                objective: 'Can I… design my own game world?', 
+                mission: '<ul class="mission-list"><li>Sketch or design a background for my game.</li><li>Choose characters and objects that fit my theme.</li><li>Explain how players move around.</li></ul>', 
+                tip: '🎯 Leader Focus: Guide teammates to visualise the game setting and agree on the story world.', 
+                imageUrl: 'https://placehold.co/640x360/000000/FFFFFF?text=PLANNING+WORLD' 
+            },
+            { 
+                id: 'chamber3', 
+                icon: 'brick-wall', 
+                title: 'Chamber 3: Make a Player Sprite', 
+                skill: 'Sprite Creation & Movement', 
+                objective: 'Can I… make and control a player?', 
+                mission: '<ul class="mission-list"><li>Create a player sprite using MakeCode.</li><li>Make it move with the controller buttons.</li><li>Add start positions and boundaries.</li></ul>', 
+                tip: '🎯 Leader Focus: Support teammates as they code and test movement together.', 
+                imageUrl: 'https://placehold.co/640x360/000000/FFFFFF?text=PLAYER+SPRITE+MOVEMENT' 
+            },
+            { 
+                id: 'chamber4', 
+                icon: 'zap', 
+                title: 'Chamber 4: Add Enemies and Hazards', 
+                skill: 'Enemy AI & Collision', 
+                objective: 'Can I… add enemies that move and challenge the player?', 
+                mission: '<ul class="mission-list"><li>Create one or more enemies.</li><li>Make them move or patrol.</li><li>Restart the game or lose a life if they touch the player.</li></ul>', 
+                tip: '🎯 Leader Focus: Help the team brainstorm fair challenges and troubleshoot collision problems.', 
+                imageUrl: 'https://placehold.co/640x360/000000/FFFFFF?text=ENEMIES+%26+HAZARDS' 
+            },
+            { 
+                id: 'chamber5', 
+                icon: 'diamond', 
+                title: 'Chamber 5: Add Collectibles and Scoring', 
+                skill: 'Scoring & Collectibles', 
+                objective: 'Can I… add things to collect and score points?', 
+                mission: '<ul class="mission-list"><li>Create an item that gives points when collected.</li><li>Make a score show on screen.</li><li>Test that it works every time.</li></ul>', 
+                tip: '🎯 Leader Focus: Encourage everyone to balance difficulty and rewards.', 
+                imageUrl: 'https://placehold.co/640x360/000000/FFFFFF?text=COLLECTIBLES+%26+SCORE' 
+            },
+            { 
+                id: 'chamber6', 
+                icon: 'music', 
+                title: 'Chamber 6: Add Sound and Effects', 
+                skill: 'Audio Design & FX', 
+                objective: 'Can I… make my game feel alive with sound and effects?', 
+                mission: '<ul class="mission-list"><li>Add sound for actions (jump, collect, hit).</li><li>Add background music or victory sounds.</li><li>Use particle or visual effects for fun moments.</li></ul>', 
+                tip: '🎯 Leader Focus: Coordinate sound choices so they match the story and don’t clash.', 
+                imageUrl: 'https://placehold.co/640x360/000000/FFFFFF?text=SOUND+%26+EFFECTS' 
+            },
+            { 
+                id: 'chamber7', 
+                icon: 'puzzle', 
+                title: 'Chamber 7: Level Design and Testing', 
+                skill: 'QA & Iteration', 
+                objective: 'Can I… design and test a full game level?', 
+                mission: '<ul class="mission-list"><li>Plan and build a playable level.</li><li>Make sure it’s fair and challenging.</li><li>Ask friends to test and give feedback.</li></ul>', 
+                tip: '🎯 Leader Focus: Lead testing rounds, record feedback, and guide small improvements.', 
+                imageUrl: 'https://placehold.co/640x360/000000/FFFFFF?text=LEVEL+TESTING' 
+            },
+            { 
+                id: 'chamber8', 
+                icon: 'star', 
+                title: 'Chamber 8: Share and Reflect', 
+                skill: 'Presentation & Reflection', 
+                objective: 'Can I… share my game and explain how it works?', 
+                mission: '<ul class="mission-list"><li>Show my game to others and explain what I made.</li><li>Talk about what I’m proud of.</li><li>Say what I’d improve next time.</li></ul>', 
+                tip: '🎯 Leader Focus: Help the team present confidently and celebrate what everyone achieved.', 
+                imageUrl: 'https://placehold.co/640x360/000000/FFFFFF?text=SHARE+%26+REFLECT' 
+            }
+        ];
+        const achievementsData = [
+            { icon: 'zap', title: '🧠 Namer', description: 'Match your variable names to what they actually do (e.g., `current_score`).' },
+            { icon: 'crosshair', title: '💥 Bounds', description: 'Successfully implement the **\'stay on screen\'** feature.' },
+            { icon: 'gauge', title: '⚡ Scaler', description: 'Correctly multiply an enemy\'s speed by the current level value.' },
+            { icon: 'message-square-text', title: '💬 Clue-Smith', description: 'Post a high-quality, helpful tip to the Clue Wall.' }
+        ];
+        const rubricData = [
+            { criteria: 'Movement', starting: 'Basic movement is functional.', getting: 'Smooth, multi-directional movement.', master: 'Smooth and well-animated movement.' },
+            { criteria: 'Enemies', starting: 'An enemy exists and moves.', getting: 'Enemy follows and is affected by an overlap rule.', master: 'Enemy follows, affects lives, and has fair respawn logic.' },
+            { criteria: 'Coins', starting: 'Coins appear and can be touched.', getting: 'Coins are collectible and successfully add points.', master: 'Coins are collectible, add points, and feature a fun animation.' },
+            { criteria: 'Levels', starting: 'Attempted to use a variable.', getting: 'Levels change the background by score, but thresholds could be better.', master: 'Levels change by score using smart thresholds (0-5, 6-10, etc.).' },
+            { criteria: 'Collaboration', starting: 'Worked primarily alone.', getting: 'Shared ideas within the team.', master: 'Actively shared a "Magpie" idea and contributed a helpful "Clue."' }
+        ];
+
+
+        // --- Firebase Functions ---
+
+        async function initializeFirebase() {
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                userId = auth.currentUser?.uid || crypto.randomUUID();
+                document.getElementById('user-display').textContent = `HERO ID: ${userId.substring(0, 8)}...`;
+
+                promptForTeamId();
+
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                document.getElementById('user-display').textContent = 'Error loading hero.';
+                document.getElementById('loading-spinner').classList.add('hidden');
+                // Fallback to simplified UI if Firebase fails
+            }
+        }
+
+        function promptForTeamId() {
+            let storedTeamId = localStorage.getItem('olympus_team_id');
+            
+            if (!storedTeamId) {
+                storedTeamId = window.prompt("WELCOME HERO! ENTER YOUR TEAM NAME (E.G., TEAM HERCULES):", "TEAM NAME");
+            }
+            
+            if (storedTeamId && storedTeamId.trim() !== '') {
+                teamId = storedTeamId.trim();
+                localStorage.setItem('olympus_team_id', teamId);
+                document.getElementById('team-display').textContent = `TEAM ID: ${teamId.toUpperCase()}`;
+                setupProgressListener();
+            } else {
+                teamId = `solo-${userId}`;
+                document.getElementById('team-display').textContent = `SOLO MODE: ${userId.substring(0, 8)}...`;
+                setupProgressListener();
+            }
+        }
+
+        document.getElementById('team-display').addEventListener('click', () => {
+            localStorage.removeItem('olympus_team_id'); 
+            document.getElementById('loading-spinner').classList.remove('hidden');
+            document.getElementById('content-container').innerHTML = ''; 
+            promptForTeamId();
+        });
+
+
+        function setupProgressListener() {
+            if (!teamId || !db) return;
+
+            const docRef = doc(db, TEAM_COLLECTION_PATH, teamId, 'progress', STATUS_DOCUMENT_ID);
+            
+            if(teamId.startsWith('solo-') && teamId.length > 5) {
+                const privatePath = `artifacts/${appId}/users/${userId}/olympus_progress/status`;
+                onSnapshot(doc(db, privatePath), handleSnapshot, handleError);
+            } else {
+                onSnapshot(docRef, handleSnapshot, handleError);
+            }
+
+            function handleSnapshot(docSnap) {
+                if (docSnap.exists()) {
+                    userProgress = docSnap.data() || {};
+                    console.log(`Current progress for ${teamId}:`, userProgress);
+                } else {
+                    userProgress = {}; 
+                    console.log(`No progress found for ${teamId}. Starting fresh.`);
+                }
+                renderActiveTab();
+                document.getElementById('loading-spinner').classList.add('hidden');
+            }
+
+            function handleError(error) {
+                console.error("Error listening to progress:", error);
+                document.getElementById('loading-spinner').classList.add('hidden');
+            }
+        }
+
+        async function updateProgress(chamberId, isComplete) {
+            if (!db || !teamId) {
+                console.error("Database or Team ID not initialized.");
+                return;
+            }
+
+            let docRef;
+            if(teamId.startsWith('solo-')) {
+                const privatePath = `artifacts/${appId}/users/${userId}/olympus_progress/status`;
+                docRef = doc(db, privatePath);
+            } else {
+                docRef = doc(db, TEAM_COLLECTION_PATH, teamId, 'progress', STATUS_DOCUMENT_ID);
+            }
+            
+            userProgress[chamberId] = isComplete;
+
+            try {
+                await setDoc(docRef, userProgress, { merge: true });
+                console.log(`Progress updated for ${teamId} (${chamberId}: ${isComplete})`);
+            } catch (e) {
+                console.error("Error updating document: ", e);
+            }
+        }
+
+
+        // --- UI Rendering Functions (RETRO STYLED) ---
+
+        function renderChambers() {
+            const html = chambersData.map(chamber => {
+                const isCompleted = userProgress[chamber.id] === true;
+                
+                const completeClass = isCompleted 
+                    ? 'bg-green-600 border-green-400 shadow-none text-black' 
+                    : 'bg-gray-800 border-yellow-400 retro-bg text-white';
+                
+                const checkIcon = isCompleted ? 'check-square' : 'square';
+                const titleColor = isCompleted ? 'text-black' : 'retro-text';
+
+                return `
+                    <div id="${chamber.id}" class="chamber-card p-4 rounded-none transition duration-100 border-4 ${completeClass}" data-chamber-id="${chamber.id}">
+                        <div class="flex items-start justify-between cursor-pointer" onclick="window.toggleChamberContent('${chamber.id}')">
+                            <div class="flex items-center">
+                                <i data-lucide="${chamber.icon}" class="w-7 h-7 mr-4 ${titleColor}"></i>
+                                <div>
+                                    <h2 class="text-2xl font-bold ${titleColor}">${chamber.title.toUpperCase()}</h2>
+                                    <p class="text-base font-semibold text-yellow-400">${chamber.skill.toUpperCase()}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <button class="toggle-complete retro-button p-3" data-chamber-id="${chamber.id}">
+                                    <i data-lucide="${checkIcon}" class="w-5 h-5 text-black"></i>
+                                </button>
+                                <i data-lucide="chevron-down" class="w-6 h-6 text-yellow-400 chamber-toggle-icon transition duration-100"></i>
+                            </div>
+                        </div>
+
+                        <div class="chamber-content mt-3 hidden border-t-2 border-gray-600 pt-3">
+                            <div class="p-4 bg-gray-900 border-2 border-cyan-400 text-lg text-white">
+                                
+
+${chamber.imageUrl ? `
+                                <p class="font-bold retro-text mb-3">🖼️ CHALLENGE OVERVIEW:</p>
+                                <div class="chamber-image-container relative w-full max-w-xs mx-auto overflow-hidden shadow-md mb-6" style="height: auto;">
+                                    <img src="${chamber.imageUrl}" alt="${chamber.title} Overview" class="w-full h-full object-contain">
+                                </div>
+                                ` : ''}
+
+                                <p class="font-bold retro-text mb-2">🎯 OBJECTIVE:</p>
+                                <p class="mb-4">${chamber.objective}</p>
+                                
+                                <p class="font-bold retro-text mb-2">⚔️ MISSION (OUTCOMES):</p>
+                                <div class="mb-4">${chamber.mission}</div>
+
+                                <p class="font-bold retro-text mb-3 mt-6">📺 TUTORIAL:</p>
+                                <div class="relative w-full max-w-md mx-auto overflow-hidden shadow-md mb-6 video-frame-container" style="padding-top: 56.25%">
+                                    <iframe class="absolute top-0 left-0 w-full h-full" src="https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen title="Chamber Tutorial Video Placeholder"></iframe>
+                                </div>
+
+                                <p class="font-bold retro-text mb-2">💡 PRO TIP (LEADER FOCUS):</p>
+                                <p>${chamber.tip}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('<div class="h-4"></div>'); 
+
+            document.getElementById('content-container').innerHTML = `
+                <div class="space-y-4">
+                    <h2 class="text-4xl font-bold retro-text mb-8">THE EIGHT CODE CHAMBERS</h2>
+                    ${html}
+                </div>
+                <div class="mt-8 p-4 bg-black border-4 border-red-500 rounded-none shadow-xl">
+                    <h3 class="text-xl font-bold text-red-500">📜 MOUNT OLYMPUS CLUE WALL</h3>
+                    <p class="text-base mt-2 text-white">THIS IS WHERE HEROES SHARE THEIR KNOWLEDGE! SHARE YOUR SUCCESS: <strong class="text-yellow-400">PROBLEM → CLUE → TAG → CREDIT</strong>.</p>
+                </div>
+            `;
+            lucide.createIcons();
+            addChamberListeners();
+        }
+
+        function renderAchievements() {
+            const html = achievementsData.map(achievement => `
+                <div class="p-5 bg-gray-800 border-4 border-yellow-400 retro-bg flex items-center space-x-4">
+                    <div class="bg-yellow-400 p-3 rounded-none">
+                        <i data-lucide="${achievement.icon}" class="w-6 h-6 text-black"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold retro-text">${achievement.title.toUpperCase()}</h3>
+                        <p class="text-base text-white">${achievement.description.toUpperCase()}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('content-container').innerHTML = `
+                <h2 class="text-4xl font-bold retro-text mb-8">⚡ POWER-UPS & ACHIEVEMENTS</h2>
+                <p class="mb-8 text-base text-white">EARN 4 POWER-UPS TO REACH THE SUMMIT! SHOWCASE YOUR SKILL BEYOND THE BASIC MISSION.</p>
+                <div class="grid md:grid-cols-2 gap-6">
+                    ${html}
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        function renderRubric() {
+            const rows = rubricData.map(row => `
+                <tr class="border-b border-gray-600 hover:bg-gray-700/50">
+                    <td class="p-4 font-bold text-cyan-400 text-lg">${row.criteria.toUpperCase()}</td>
+                    <td class="p-4 text-sm text-gray-400">🐣 ${row.starting}</td>
+                    <td class="p-4 text-sm text-white">⚔️ ${row.getting}</td>
+                    <td class="p-4 text-sm font-bold text-green-400">🏆 ${row.master}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('content-container').innerHTML = `
+                <h2 class="text-4xl font-bold retro-text mb-8">⚔️ ASSESSMENT SCORECARD</h2>
+                <p class="mb-8 text-base text-white">YOUR FINAL STATUS WILL BE BASED ON THE QUALITY AND COMPLETENESS OF YOUR GAME. AIM FOR MASTER HERO STATUS.</p>
+
+                <div class="overflow-x-auto bg-gray-800 border-4 border-cyan-400 retro-bg">
+                    <table class="min-w-full divide-y divide-gray-700">
+                        <thead>
+                            <tr class="bg-black text-yellow-400">
+                                <th class="p-4 text-left font-bold text-base">CRITERIA</th>
+                                <th class="p-4 text-left font-bold text-base">STARTING HERO (🐣)</th>
+                                <th class="p-4 text-left font-bold text-base">GETTING THERE (⚔️)</th>
+                                <th class="p-4 text-left font-bold text-base">MASTER HERO (🏆)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-700">
+                            ${rows}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-8 p-4 bg-black border-4 border-red-500 retro-bg">
+                    <h3 class="text-xl font-bold text-red-500">📝 TEAM PASSPORT (TRACKING)</h3>
+                    <p class="text-base mt-2 text-white">USE THIS TO TRACK YOUR TEAM NAME, ROLES, TOKENS, AND REFLECTIONS.</p>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        function setActiveTab(tabName) {
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                const isActive = btn.getAttribute('data-tab') === tabName;
+                
+                btn.classList.remove('active-tab-retro', 'hover:retro-button-hover');
+
+                if (isActive) {
+                    btn.classList.add('active-tab-retro');
+                    btn.classList.remove('text-white');
+                } else {
+                    btn.classList.add('text-white', 'hover:retro-button-hover');
+                }
+            });
+            localStorage.setItem('activeTab', tabName);
+        }
+
+        function renderActiveTab() {
+            const activeTab = localStorage.getItem('activeTab') || 'chambers';
+            setActiveTab(activeTab);
+
+            switch (activeTab) {
+                case 'chambers':
+                    renderChambers();
+                    break;
+                case 'achievements':
+                    renderAchievements();
+                    break;
+                case 'rubric':
+                    renderRubric();
+                    break;
+                default:
+                    renderChambers();
+            }
+        }
+
+        window.toggleChamberContent = function(id) {
+            const card = document.getElementById(id);
+            const content = card.querySelector('.chamber-content');
+            const icon = card.querySelector('.chamber-toggle-icon');
+
+            content.classList.toggle('hidden');
+            icon.classList.toggle('rotate-180');
+        }
+
+        function addChamberListeners() {
+            document.querySelectorAll('.toggle-complete').forEach(button => {
+                button.onclick = (e) => {
+                    e.stopPropagation(); 
+                    const chamberId = button.getAttribute('data-chamber-id');
+                    const isCurrentlyComplete = userProgress[chamberId] === true;
+                    updateProgress(chamberId, !isCurrentlyComplete);
+                };
+            });
+        }
+
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const tabName = button.getAttribute('data-tab');
+                setActiveTab(tabName);
+                renderActiveTab();
+            });
+        });
+
+        initializeFirebase();
+        lucide.createIcons();
+    </script>
+</body>
+</html>
