@@ -130,23 +130,157 @@
 
         // --- Data Definitions (UPDATED with image paths) ---
         const chambersData = [
-            { id: 'chamber1', icon: 'zap', title: 'Chamber 1: Wake the Hero', skill: 'Movement & Stay on Screen', objective: 'Can I make my hero move and keep him on screen?', mission: '<ul class="mission-list"><li>Move Hercules.</li><li>Ensure he stays on screen.</li><li>Set the enemy Lion to follow him (speed 10).</li></ul>', tip: "If your enemy won't move, check to make sure the **follow speed is set correctly**!", imageUrl: 'https://cdn.glitch.global/c347d4a2-9e96-4186-b485-6b582121e780/what-makes-a-good-game.png?v=1719276587396' }, // Chamber 1 with portrait image
-            { id: 'chamber2', icon: 'message-square', title: 'Chamber 2: Set the Scene & Speak', skill: 'Dialogue & Scene', objective: 'Can I create a background and dialogue?', mission: '<ul class="mission-list"><li>Set a background image for your scene.</li><li>Add a dialogue frame with a long piece of introductory text.</li></ul>', tip: 'Magpie: Borrow a better, more readable dialogue style from another team’s project.', imageUrl: 'https://via.placeholder.com/640x360/000000/FFFFFF?text=Chamber+2+Image' },
-            { id: 'chamber3', icon: 'shield-off', title: 'Chamber 3: Danger Rules', skill: 'Overlap & Lives', objective: 'Can I make an overlap rule for losing lives?', mission: '<ul class="mission-list"><li>When your hero overlaps the enemy, play a sound.</li><li>Lose 1 life.</li><li>Reset the enemy\'s position for a fair fight.</li></ul>', tip: 'Magpie: Copy a clever idea for a **fair respawn position** from a successful team.', imageUrl: 'https://via.placeholder.com/640x360/000000/FFFFFF?text=Chamber+3+Image' },
-            { id: 'chamber4', icon: 'gem', title: 'Chamber 4: Shiny Coins', skill: 'Coins & Score', objective: 'Can I collect coins for points?', mission: '<ul class="mission-list"><li>Spawn coins every 2 seconds.</li><li>Animate them to make them shiny.</li><li>Create an overlap rule for +1 score.</li></ul>', tip: 'Magpie: Add a **fun sound** effect when your hero successfully collects a coin!', imageUrl: 'https://via.placeholder.com/640x360/000000/FFFFFF?text=Chamber+4+Image' },
-            { id: 'chamber5', icon: 'bar-chart-2', title: 'Chamber 5: Levels Unlocked', skill: 'Variables & Levels', objective: 'Can I change levels based on score?', mission: '<ul class="mission-list"><li>Use variables and a forever loop to monitor the score.</li><li>Change the background image once certain scores are reached.</li></ul>', tip: 'Magpie: Try using smarter thresholds, like changing the level at scores (0–5, then 6–10, then 11–15, etc.).', imageUrl: 'https://via.placeholder.com/640x360/000000/FFFFFF?text=Chamber+5+Image' },
-            { id: 'chamber6', icon: 'sword', title: 'Chamber 6: Boss Logic', skill: 'Scaling Enemies', objective: 'Can I scale enemies by level to increase the difficulty?', mission: '<ul class="mission-list"><li>Use an If/Else block: If level = 1 → use the lion enemy, If level = 2 → use the hydra enemy.</li><li>Increase the enemy\'s speed by (level × 10).</li></ul>', tip: 'Magpie: Add a block of code for **random enemy spawns** to keep the game unpredictable.', imageUrl: 'https://via.placeholder.com/640x360/000000/FFFFFF?text=Chamber+6+Image' }
-        ];
+  {
+    id: 'chamber1',
+    icon: 'zap',
+    title: 'Chamber 1: Wake the Hero',
+    skill: 'Movement, Stay on Screen & Researching',
+    objective: 'Can I move smoothly, stay on screen, and look up how others solved it?',
+    mission: `
+      <ul class="mission-list">
+        <li>Add a player sprite and enable four-way movement.</li>
+        <li>Keep the player on screen (stay-in-bounds).</li>
+        <li>Extension: set an enemy to auto-move (speed 10).</li>
+      </ul>`,
+    tip: "If your enemy won't move, double-check the **follow / velocity** settings.",
+    story: 'The hero awakens on Olympus. Research a good control scheme and guide the first steps.',
+    scorecard: ['MOVEMENT', 'FUN FACTOR', 'RESEARCHING'],
+    imageUrl: 'https://raw.githubusercontent.com/GlennMalcolm/Y3T1bMakeCode/refs/heads/main/Lesson%201%20-%20MakeCode%20Year%203%20-%20Mount%20Olympus%20Challenge.png'
+  },
+
+  {
+    id: 'chamber2',
+    icon: 'message-square',
+    title: 'Chamber 2: Set the Scene & Speak',
+    skill: 'Dialogue & Scene',
+    objective: 'Can I build a readable scene and start a simple game story?',
+    mission: `
+      <ul class="mission-list">
+        <li>Choose a clear background that matches your theme.</li>
+        <li>Add a dialogue frame with an intro (longer text, readable style).</li>
+      </ul>`,
+    tip: 'Magpie: Borrow a more legible dialogue style from a successful project.',
+    story: 'The skies shift; your tale begins. Make players understand where and why.',
+    scorecard: ['GAME STORY', 'SOUND & MUSIC'],
+    imageUrl: 'https://raw.githubusercontent.com/GlennMalcolm/Y3T1bMakeCode/refs/heads/main/Lesson%202%20-%20MakeCode%20Year%203%20-%20Mount%20Olympus%20Challenge.png'
+  },
+
+  {
+    id: 'chamber3',
+    icon: 'shield-off',
+    title: 'Chamber 3: Danger Rules',
+    skill: 'Overlap & Lives',
+    objective: 'Can I create fair enemy contact and lose a life on overlap?',
+    mission: `
+      <ul class="mission-list">
+        <li>Play a sound when hero overlaps the enemy.</li>
+        <li>Lose 1 life and reset the enemy to a fair position.</li>
+      </ul>`,
+    tip: 'Test that respawns aren’t instant hits — give the player a chance!',
+    story: 'Dark forces awaken; honour demands a fair fight.',
+    scorecard: ['ENEMIES', 'FUN FACTOR'],
+    imageUrl: 'https://github.com/GlennMalcolm/Y3T1bMakeCode/blob/main/Lesson%203%20-%20MakeCode%20Year%203%20-%20Mount%20Olympus%20Challenge.png?raw=true'
+  },
+
+  {
+    id: 'chamber4',
+    icon: 'gem',
+    title: 'Chamber 4: Shiny Coins',
+    skill: 'Coins & Score',
+    objective: 'Can I spawn, animate, and collect coins for points?',
+    mission: `
+      <ul class="mission-list">
+        <li>Spawn coins every 2 seconds.</li>
+        <li>Animate coins so they look shiny.</li>
+        <li>On overlap: destroy coin, add +1 score, play a fun sound.</li>
+      </ul>`,
+    tip: 'Short, happy sounds make collecting feel great.',
+    story: 'Gold glitters across Olympus — make it satisfying to collect.',
+    scorecard: ['COINS', 'SOUND & MUSIC', 'FUN FACTOR'],
+    imageUrl: 'https://github.com/GlennMalcolm/Y3T1bMakeCode/blob/main/Lesson%204%20-%20MakeCode%20Year%203%20-%20Mount%20Olympus%20Challenge.png?raw=true'
+  },
+
+  {
+    id: 'chamber5',
+    icon: 'bar-chart-2',
+    title: 'Chamber 5: Levels Unlocked',
+    skill: 'Variables & Levels',
+    objective: 'Can I change backgrounds or difficulty as the score rises?',
+    mission: `
+      <ul class="mission-list">
+        <li>Use a variable and a forever loop to watch the score.</li>
+        <li>Change background or raise difficulty at score bands (0–5, 6–10, 11–15).</li>
+      </ul>`,
+    tip: 'Make early play friendly; ramp slowly so it stays fair.',
+    story: 'As Hercules grows stronger, the world transforms.',
+    scorecard: ['LEVELS', 'FUN FACTOR'],
+    imageUrl: 'https://github.com/GlennMalcolm/Y3T1bMakeCode/blob/main/Lesson%205%20-%20MakeCode%20Year%203%20-%20Mount%20Olympus%20Challenge.png?raw=true'
+  },
+
+  {
+    id: 'chamber6',
+    icon: 'activity',
+    title: 'Chamber 6: The Hydra’s Wrath',
+    skill: 'Scaling Enemies',
+    objective: 'Can I scale enemy type and speed by level to keep it fair but exciting?',
+    mission: `
+      <ul class="mission-list">
+        <li>If level = 1 → lion enemy; if level = 2 → hydra enemy.</li>
+        <li>Enemy speed = level × 10 (or similar).</li>
+        <li>(Optional) Random enemy spawns that feel fair.</li>
+      </ul>`,
+    tip: 'Small speed changes matter — test and tune.',
+    story: 'The Hydra rises; only smart scaling can match its fury.',
+    scorecard: ['ENEMIES', 'FUN FACTOR'],
+    imageUrl: 'https://raw.githubusercontent.com/GlennMalcolm/Y3T1bMakeCode/refs/heads/main/Lesson%206%20-%20MakeCode%20Year%203%20-%20Mount%20Olympus%20Challenge.png'
+  },
+
+  {
+    id: 'chamber7',
+    icon: 'target',
+    title: 'Chamber 7: Trial of Olympus',
+    skill: 'Boss Battle & Timing',
+    objective: 'Can I test, debug, and improve the challenge with help from a friend?',
+    mission: `
+      <ul class="mission-list">
+        <li>Find and fix at least two bugs that affect play.</li>
+        <li>Ask a friend to test; record one change from their feedback.</li>
+        <li>Tune timing/attacks so the battle is tough but fair.</li>
+      </ul>`,
+    tip: 'Collaboration makes games better — write down feedback.',
+    story: 'Every second counts in this divine duel.',
+    scorecard: ['COLLABORATION', 'FUN FACTOR'],
+    imageUrl: 'https://github.com/GlennMalcolm/Y3T1bMakeCode/blob/main/Lesson%207%20-%20MakeCode%20Year%203%20-%20Mount%20Olympus%20Challenge.png?raw=true'
+  },
+
+  {
+    id: 'chamber8',
+    icon: 'trophy',
+    title: 'Chamber 8: The Hero’s Triumph',
+    skill: 'Endgame & Reflection',
+    objective: 'Can I share my game, play others’ games, and explain what I learned?',
+    mission: `
+      <ul class="mission-list">
+        <li>Show your game to others (explain controls and goal).</li>
+        <li>Play friends’ games and give kind, helpful feedback.</li>
+        <li>Reflect: what works well; what would you add next?</li>
+      </ul>`,
+    tip: 'A short victory screen and clear message make sharing smooth.',
+    story: 'Victory! The greatest heroes reflect and share.',
+    scorecard: ['COLLABORATION', 'GAME STORY', 'FUN FACTOR'],
+    imageUrl: 'https://github.com/GlennMalcolm/Y3T1bMakeCode/blob/main/Lesson%208%20-%20MakeCode%20Year%203%20-%20Mount%20Olympus%20Challenge.png?raw=true'
+  }
+];
        
         const achievementsData = [
-            { icon: 'zap', title: '🧠 Searcher', description: 'Search in the SKILLMAPS to find your clues on how to make things work' },
-            { icon: 'crosshair', title: '💥 Bounds', description: 'Successfully implement the \'stay on screen\' feature.' },
+            { icon: 'zap', title: '🧠 Searcher', description: 'Search in the SKILLMAPS to find your clues on how to make things work and learn what makes a good game' },
+            { icon: 'crosshair', title: '💥 Bounds', description: 'Successfully add the \'stay on screen\' feature to your character.' },
             { icon: 'gauge', title: '⚡ Scaler', description: 'Correctly multiply an enemy\'s speed by the current level value.' },
             { icon: 'message-square-text', title: '💬 Clue-Smith', description: 'Post a high-quality, helpful tip to the Clue Wall.' },
             { icon: 'zap', title: '🧠 Character-Smith', description: 'Choose Suitable Characters.' },
             { icon: 'crosshair', title: '💥 Mover', description: 'Control Characters with W,A,S,D' },
             { icon: 'gauge', title: '⚡ Collider', description: 'Collisions with items to get points.' },
-            { icon: 'message-square-text', title: '💬 Baddies', description: 'Create a moving baddie that is automatic' },
+            { icon: 'message-square-text', title: '💬 Baddies', description: 'Create a moving baddie that moves automatically or follows you' },
             { icon: 'zap', title: '🧠 Loser', description: 'Lose points when baddies collide with you' },
             { icon: 'crosshair', title: '💥 Up Them Points', description: 'Get Points on collisions with coins or scores' },
             { icon: 'gauge', title: '⚡ Level Up', description: 'Make new levels when a score is reached or a tile is walked on' },
@@ -363,7 +497,7 @@
 
                                 <p class="font-bold retro-text mb-3 mt-6">📺 TUTORIAL:</p>
                                 <div class="relative w-full max-w-md mx-auto overflow-hidden shadow-md mb-6 video-frame-container" style="padding-top: 56.25%">
-                                    <iframe class="absolute top-0 left-0 w-full h-full" src="https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen title="Chamber Tutorial Video Placeholder"></iframe>
+                                    <iframe class="absolute top-0 left-0 w-full h-full" src="https://youtu.be/EPRWvLGQ-XA" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen title="Chamber Tutorial Video Placeholder"></iframe>
                                 </div>
 
                                 <p class="font-bold retro-text mb-2">💡 PRO TIP:</p>
