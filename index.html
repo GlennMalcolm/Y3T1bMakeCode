@@ -69,18 +69,19 @@
 </head>
 <body class="min-h-screen font-sans">
 
-    
-
-<header class="bg-black text-white p-4 shadow-lg sticky top-0 z-10 border-b-4 border-cyan-400">
+    <!-- Header (Black/Cyan Theme) --><header class="bg-black text-white p-4 shadow-lg sticky top-0 z-10 border-b-4 border-cyan-400">
         <div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center">
             <h1 class="text-3xl font-extrabold tracking-tight retro-text">
                 <i data-lucide="crown" class="inline-block w-6 h-6 mr-2"></i> OLYMPUS ARCADE QUEST
             </h1>
+            <div class="flex flex-col sm:flex-row sm:space-x-4 mt-2 sm:mt-0 text-base opacity-90 text-yellow-400">
+                <p id="team-display" class="cursor-pointer font-bold underline hover:text-white" title="Click to change team name">Loading Team...</p>
+                <p id="user-display" class="hidden sm:inline">HERO ID: Loading...</p>
+            </div>
+        </div>
     </header>
 
-    
-
-<nav class="bg-gray-800 shadow-inner border-b-4 border-gray-600">
+    <!-- Navigation Tabs (Black/Yellow/Green Active) --><nav class="bg-gray-800 shadow-inner border-b-4 border-gray-600">
         <div class="max-w-4xl mx-auto flex justify-around text-center py-2">
             <button data-tab="chambers" class="tab-button px-3 py-2 text-base font-bold border-b-4 border-transparent transition duration-0 retro-text active-tab-retro">
                 <i data-lucide="map" class="w-4 h-4 inline mr-1"></i> CHAMBERS
@@ -94,29 +95,19 @@
         </div>
     </nav>
 
-    
+    <!-- Main Content Area --><main class="max-w-4xl mx-auto p-4 md:p-8">
 
-<main class="max-w-4xl mx-auto p-4 md:p-8">
-
-        
-
-<div id="content-container">
-            
-
-</div>
+        <!-- Tab Content Container --><div id="content-container">
+            <!-- Dynamic content will be loaded here --></div>
 
     </main>
 
-    
-
-<div id="loading-spinner" class="fixed inset-0 bg-black/90 flex items-center justify-center z-50">
+    <!-- Loading Indicator (Retro Style) --><div id="loading-spinner" class="fixed inset-0 bg-black/90 flex items-center justify-center z-50">
         <div class="text-2xl font-bold retro-text animate-pulse">LOADING...</div>
     </div>
 
 
-    
-
-<script type="module">
+    <!-- Firebase Setup and App Logic --><script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -137,90 +128,16 @@
         let teamId = null; 
         let userProgress = {}; 
 
-        // --- Data Definitions (UPDATED with 8 Chambers) ---
+        // --- Data Definitions (UPDATED with image paths) ---
         const chambersData = [
-            { 
-                id: 'chamber1', 
-                icon: 'gamepad', 
-                title: 'Chamber 1: What Makes a Good Game?', 
-                skill: 'Game Analysis & Discussion', 
-                objective: 'Can I… understand what makes a good game?', 
-                mission: '<ul class="mission-list"><li>Talk about games I enjoy and why.</li><li>Spot what makes a game fun or challenging.</li><li>Share my ideas for a new game.</li></ul>', 
-                tip: "🎯 Leader Focus: Lead the team in discussing and comparing favourite games to spot patterns of fun and fairness.", 
-                // Retaining the specific image URL for Chamber 1
-                imageUrl: 'https://cdn.glitch.global/c347d4a2-9e96-4186-b485-6b582121e780/what-makes-a-good-game.png?v=1719276587396' 
-            },
-            { 
-                id: 'chamber2', 
-                icon: 'lightbulb', 
-                title: 'Chamber 2: Planning My Game World', 
-                skill: 'Game Design & Planning', 
-                objective: 'Can I… design my own game world?', 
-                mission: '<ul class="mission-list"><li>Sketch or design a background for my game.</li><li>Choose characters and objects that fit my theme.</li><li>Explain how players move around.</li></ul>', 
-                tip: '🎯 Leader Focus: Guide teammates to visualise the game setting and agree on the story world.', 
-                imageUrl: 'https://placehold.co/640x360/000000/FFFFFF?text=PLANNING+WORLD' 
-            },
-            { 
-                id: 'chamber3', 
-                icon: 'brick-wall', 
-                title: 'Chamber 3: Make a Player Sprite', 
-                skill: 'Sprite Creation & Movement', 
-                objective: 'Can I… make and control a player?', 
-                mission: '<ul class="mission-list"><li>Create a player sprite using MakeCode.</li><li>Make it move with the controller buttons.</li><li>Add start positions and boundaries.</li></ul>', 
-                tip: '🎯 Leader Focus: Support teammates as they code and test movement together.', 
-                imageUrl: 'https://placehold.co/640x360/000000/FFFFFF?text=PLAYER+SPRITE+MOVEMENT' 
-            },
-            { 
-                id: 'chamber4', 
-                icon: 'zap', 
-                title: 'Chamber 4: Add Enemies and Hazards', 
-                skill: 'Enemy AI & Collision', 
-                objective: 'Can I… add enemies that move and challenge the player?', 
-                mission: '<ul class="mission-list"><li>Create one or more enemies.</li><li>Make them move or patrol.</li><li>Restart the game or lose a life if they touch the player.</li></ul>', 
-                tip: '🎯 Leader Focus: Help the team brainstorm fair challenges and troubleshoot collision problems.', 
-                imageUrl: 'https://placehold.co/640x360/000000/FFFFFF?text=ENEMIES+%26+HAZARDS' 
-            },
-            { 
-                id: 'chamber5', 
-                icon: 'diamond', 
-                title: 'Chamber 5: Add Collectibles and Scoring', 
-                skill: 'Scoring & Collectibles', 
-                objective: 'Can I… add things to collect and score points?', 
-                mission: '<ul class="mission-list"><li>Create an item that gives points when collected.</li><li>Make a score show on screen.</li><li>Test that it works every time.</li></ul>', 
-                tip: '🎯 Leader Focus: Encourage everyone to balance difficulty and rewards.', 
-                imageUrl: 'https://placehold.co/640x360/000000/FFFFFF?text=COLLECTIBLES+%26+SCORE' 
-            },
-            { 
-                id: 'chamber6', 
-                icon: 'music', 
-                title: 'Chamber 6: Add Sound and Effects', 
-                skill: 'Audio Design & FX', 
-                objective: 'Can I… make my game feel alive with sound and effects?', 
-                mission: '<ul class="mission-list"><li>Add sound for actions (jump, collect, hit).</li><li>Add background music or victory sounds.</li><li>Use particle or visual effects for fun moments.</li></ul>', 
-                tip: '🎯 Leader Focus: Coordinate sound choices so they match the story and don’t clash.', 
-                imageUrl: 'https://placehold.co/640x360/000000/FFFFFF?text=SOUND+%26+EFFECTS' 
-            },
-            { 
-                id: 'chamber7', 
-                icon: 'puzzle', 
-                title: 'Chamber 7: Level Design and Testing', 
-                skill: 'QA & Iteration', 
-                objective: 'Can I… design and test a full game level?', 
-                mission: '<ul class="mission-list"><li>Plan and build a playable level.</li><li>Make sure it’s fair and challenging.</li><li>Ask friends to test and give feedback.</li></ul>', 
-                tip: '🎯 Leader Focus: Lead testing rounds, record feedback, and guide small improvements.', 
-                imageUrl: 'https://placehold.co/640x360/000000/FFFFFF?text=LEVEL+TESTING' 
-            },
-            { 
-                id: 'chamber8', 
-                icon: 'star', 
-                title: 'Chamber 8: Share and Reflect', 
-                skill: 'Presentation & Reflection', 
-                objective: 'Can I… share my game and explain how it works?', 
-                mission: '<ul class="mission-list"><li>Show my game to others and explain what I made.</li><li>Talk about what I’m proud of.</li><li>Say what I’d improve next time.</li></ul>', 
-                tip: '🎯 Leader Focus: Help the team present confidently and celebrate what everyone achieved.', 
-                imageUrl: 'https://placehold.co/640x360/000000/FFFFFF?text=SHARE+%26+REFLECT' 
-            }
+            { id: 'chamber1', icon: 'zap', title: 'Chamber 1: Wake the Hero', skill: 'Movement & Stay on Screen', objective: 'Can I make my hero move and keep him on screen?', mission: '<ul class="mission-list"><li>Move Hercules.</li><li>Ensure he stays on screen.</li><li>Set the enemy Lion to follow him (speed 10).</li></ul>', tip: "If your enemy won't move, check to make sure the **follow speed is set correctly**!", imageUrl: 'https://cdn.glitch.global/c347d4a2-9e96-4186-b485-6b582121e780/what-makes-a-good-game.png?v=1719276587396' }, // Chamber 1 with portrait image
+            { id: 'chamber2', icon: 'message-square', title: 'Chamber 2: Set the Scene & Speak', skill: 'Dialogue & Scene', objective: 'Can I create a background and dialogue?', mission: '<ul class="mission-list"><li>Set a background image for your scene.</li><li>Add a dialogue frame with a long piece of introductory text.</li></ul>', tip: 'Magpie: Borrow a better, more readable dialogue style from another team’s project.', imageUrl: 'https://via.placeholder.com/640x360/000000/FFFFFF?text=Chamber+2+Image' },
+            { id: 'chamber3', icon: 'shield-off', title: 'Chamber 3: Danger Rules', skill: 'Overlap & Lives', objective: 'Can I make an overlap rule for losing lives?', mission: '<ul class="mission-list"><li>When your hero overlaps the enemy, play a sound.</li><li>Lose 1 life.</li><li>Reset the enemy\'s position for a fair fight.</li></ul>', tip: 'Magpie: Copy a clever idea for a **fair respawn position** from a successful team.', imageUrl: 'https://via.placeholder.com/640x360/000000/FFFFFF?text=Chamber+3+Image' },
+            { id: 'chamber4', icon: 'gem', title: 'Chamber 4: Shiny Coins', skill: 'Coins & Score', objective: 'Can I collect coins for points?', mission: '<ul class="mission-list"><li>Spawn coins every 2 seconds.</li><li>Animate them to make them shiny.</li><li>Create an overlap rule for +1 score.</li></ul>', tip: 'Magpie: Add a **fun sound** effect when your hero successfully collects a coin!', imageUrl: 'https://via.placeholder.com/640x360/000000/FFFFFF?text=Chamber+4+Image' },
+            { id: 'chamber5', icon: 'bar-chart-2', title: 'Chamber 5: Levels Unlocked', skill: 'Variables & Levels', objective: 'Can I change levels based on score?', mission: '<ul class="mission-list"><li>Use variables and a forever loop to monitor the score.</li><li>Change the background image once certain scores are reached.</li></ul>', tip: 'Magpie: Try using smarter thresholds, like changing the level at scores (0–5, then 6–10, then 11–15, etc.).', imageUrl: 'https://via.placeholder.com/640x360/000000/FFFFFF?text=Chamber+5+Image' },
+            { id: 'chamber6', icon: 'sword', title: 'Chamber 6: Boss Logic', skill: 'Scaling Enemies', objective: 'Can I scale enemies by level to increase the difficulty?', mission: '<ul class="mission-list"><li>Use an If/Else block: If level = 1 → use the lion enemy, If level = 2 → use the hydra enemy.</li><li>Increase the enemy\'s speed by (level × 10).</li></ul>', tip: 'Magpie: Add a block of code for **random enemy spawns** to keep the game unpredictable.', imageUrl: 'https://via.placeholder.com/640x360/000000/FFFFFF?text=Chamber+6+Image' }
         ];
+       
         const achievementsData = [
             { icon: 'zap', title: '🧠 Searcher', description: 'Search in the SKILLMAPS to find your clues on how to make things work' },
             { icon: 'crosshair', title: '💥 Bounds', description: 'Successfully implement the \'stay on screen\' feature.' },
@@ -235,8 +152,8 @@
             { icon: 'gauge', title: '⚡ Level Up', description: 'Make new levels when a score is reached or a tile is walked on' },
             { icon: 'message-square-text', title: '💬 Speedy J', description: 'New Speed on Points - get 20 points and you get a new speed' },
             { icon: 'zap', title: '🧠 Namer', description: 'Match your variable names to what they actually do (e.g., `current_score`).' }
-
-const rubricData = [
+        ];
+        const rubricData = [
   { 
     criteria: 'Movement', 
     starting: '🐣 My player can move a little.', 
@@ -286,6 +203,7 @@ const rubricData = [
     master: '🏆 My game is super fun, fair, and makes people want to play again!' 
   }
 ];
+
 
 
         // --- Firebase Functions ---
@@ -430,9 +348,7 @@ const rubricData = [
 
                         <div class="chamber-content mt-3 hidden border-t-2 border-gray-600 pt-3">
                             <div class="p-4 bg-gray-900 border-2 border-cyan-400 text-lg text-white">
-                                
-
-${chamber.imageUrl ? `
+                                <!-- Image display for the chamber with adjusted styling for portrait A4 -->${chamber.imageUrl ? `
                                 <p class="font-bold retro-text mb-3">🖼️ CHALLENGE OVERVIEW:</p>
                                 <div class="chamber-image-container relative w-full max-w-xs mx-auto overflow-hidden shadow-md mb-6" style="height: auto;">
                                     <img src="${chamber.imageUrl}" alt="${chamber.title} Overview" class="w-full h-full object-contain">
@@ -442,7 +358,7 @@ ${chamber.imageUrl ? `
                                 <p class="font-bold retro-text mb-2">🎯 OBJECTIVE:</p>
                                 <p class="mb-4">${chamber.objective}</p>
                                 
-                                <p class="font-bold retro-text mb-2">⚔️ MISSION (OUTCOMES):</p>
+                                <p class="font-bold retro-text mb-2">⚔️ MISSION:</p>
                                 <div class="mb-4">${chamber.mission}</div>
 
                                 <p class="font-bold retro-text mb-3 mt-6">📺 TUTORIAL:</p>
@@ -450,7 +366,7 @@ ${chamber.imageUrl ? `
                                     <iframe class="absolute top-0 left-0 w-full h-full" src="https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen title="Chamber Tutorial Video Placeholder"></iframe>
                                 </div>
 
-                                <p class="font-bold retro-text mb-2">💡 PRO TIP (LEADER FOCUS):</p>
+                                <p class="font-bold retro-text mb-2">💡 PRO TIP:</p>
                                 <p>${chamber.tip}</p>
                             </div>
                         </div>
@@ -460,7 +376,7 @@ ${chamber.imageUrl ? `
 
             document.getElementById('content-container').innerHTML = `
                 <div class="space-y-4">
-                    <h2 class="text-4xl font-bold retro-text mb-8">THE EIGHT CODE CHAMBERS</h2>
+                    <h2 class="text-4xl font-bold retro-text mb-8">THE SIX CODE CHAMBERS</h2>
                     ${html}
                 </div>
                 <div class="mt-8 p-4 bg-black border-4 border-red-500 rounded-none shadow-xl">
